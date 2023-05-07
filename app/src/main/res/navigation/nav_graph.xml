@@ -11,12 +11,16 @@
         android:label="MainFragment"
         tools:layout="@layout/fragment_main">
         <action
-            android:id="@+id/action_mainFragment_to_resultFragment"
+            android:id="@+id/showResult"
             app:destination="@id/resultFragment" />
     </fragment>
     <fragment
         android:id="@+id/resultFragment"
         android:name="com.nikitosii.testapp.ui.result.ResultFragment"
         android:label="ResultFragment"
-        tools:layout="@layout/fragment_result" />
+        tools:layout="@layout/fragment_result">
+        <argument
+            android:name="configData"
+            app:argType="com.nikitosii.testapp.domain.source.FieldsConfig" />
+    </fragment>
 </navigation>

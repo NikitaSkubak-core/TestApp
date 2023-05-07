@@ -1,11 +1,14 @@
 package com.nikitosii.testapp.domain.source
 
-import androidx.lifecycle.MutableLiveData
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
-data class TextFieldConfig(
+
+@Parcelize
+data class Config(
     val attributeText: String,
     val attributeType: AttributeType,
     val errorText: String,
     val isValid: (String) -> Boolean,
-    val value: MutableLiveData<String> = MutableLiveData("")
-)
+    var value: String = ""
+): Parcelable

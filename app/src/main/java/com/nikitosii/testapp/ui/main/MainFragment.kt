@@ -39,7 +39,7 @@ class MainFragment : BaseFragment<MainViewModel>() {
             btnGo.onClick {
                 if ((viewModel.counter.value ?: 0) < 3)
                     updateAdapterList()
-
+                else openResult()
             }
         }
     }
@@ -50,5 +50,9 @@ class MainFragment : BaseFragment<MainViewModel>() {
 
     private fun updateAdapterList() {
         adapter.submitList(viewModel.getListOfConfigs())
+    }
+
+    private fun openResult() {
+        MainFragmentDirections.showResult(viewModel.fieldsConfig)
     }
 }

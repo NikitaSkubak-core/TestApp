@@ -4,15 +4,14 @@ import android.text.InputType.TYPE_CLASS_NUMBER
 import android.text.InputType.TYPE_TEXT_VARIATION_NORMAL
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.RecyclerView
 import com.nikitosii.testapp.databinding.ItemTextFieldConfigBinding
 import com.nikitosii.testapp.domain.source.AttributeType
-import com.nikitosii.testapp.domain.source.TextFieldConfig
+import com.nikitosii.testapp.domain.source.Config
 
 class TextFieldConfigViewHolder(private val binding: ItemTextFieldConfigBinding) :
     RecyclerView.ViewHolder(binding.root) {
-    fun bind(data: TextFieldConfig) {
+    fun bind(data: Config) {
         with(binding) {
             etFieldConfig.inputType = when (data.attributeType) {
                 AttributeType.INT, AttributeType.DOUBLE, AttributeType.BOOLEAN -> TYPE_CLASS_NUMBER
@@ -21,7 +20,7 @@ class TextFieldConfigViewHolder(private val binding: ItemTextFieldConfigBinding)
             tilConfiField.hint = data.attributeText
             etFieldConfig.setOnFocusChangeListener { _, hasFocus ->
                 val text = etFieldConfig.text.toString()
-                data.value.value = text
+                data.value = text
                 if (!hasFocus) {
                     tilConfiField.error = data.errorText
                     tilConfiField.isErrorEnabled = !data.isValid(text)
