@@ -1,6 +1,44 @@
 package com.nikitosii.testapp.ui.main
 
+import android.graphics.drawable.Drawable
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.nikitosii.testapp.databinding.FragmentMainBinding
 import com.nikitosii.testapp.ui.base.BaseFragment
+import com.nikitosii.testapp.util.annotation.RequiresViewModel
 
+@RequiresViewModel(MainViewModel::class)
 class MainFragment: BaseFragment<MainViewModel>() {
+    private lateinit var binding: FragmentMainBinding
+    private val adapter by lazy { TextFieldConfigAdapter() }
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = FragmentMainBinding.inflate(inflater)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        initViews()
+        subscribe()
+    }
+
+    private fun initViews() {
+        binding.rvConfig.adapter = adapter
+        with(binding) {
+            rvConfig.adapter = adapter
+            rvConfig.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+        }
+    }
+    private fun subscribe() {
+        adapter.submitList(viewModel.textFieldsList)
+    }
 }
