@@ -1,6 +1,5 @@
 package com.nikitosii.testapp.ui.main
 
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,9 +9,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.nikitosii.testapp.databinding.FragmentMainBinding
 import com.nikitosii.testapp.ui.base.BaseFragment
 import com.nikitosii.testapp.util.annotation.RequiresViewModel
+import com.nikitosii.testapp.util.ext.onClick
 
 @RequiresViewModel(MainViewModel::class)
-class MainFragment: BaseFragment<MainViewModel>() {
+class MainFragment : BaseFragment<MainViewModel>() {
     private lateinit var binding: FragmentMainBinding
     private val adapter by lazy { TextFieldConfigAdapter() }
     override fun onCreateView(
@@ -32,13 +32,23 @@ class MainFragment: BaseFragment<MainViewModel>() {
     }
 
     private fun initViews() {
-        binding.rvConfig.adapter = adapter
         with(binding) {
             rvConfig.adapter = adapter
+            rvConfig.adapter = adapter
             rvConfig.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+            btnGo.onClick {
+                if ((viewModel.counter.value ?: 0) < 3)
+                    updateAdapterList()
+
+            }
         }
     }
+
     private fun subscribe() {
-        adapter.submitList(viewModel.textFieldsList)
+        updateAdapterList()
+    }
+
+    private fun updateAdapterList() {
+        adapter.submitList(viewModel.getListOfConfigs())
     }
 }

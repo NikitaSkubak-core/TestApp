@@ -22,9 +22,9 @@ class TextFieldConfigViewHolder(private val binding: ItemTextFieldConfigBinding)
             etFieldConfig.setOnFocusChangeListener { _, hasFocus ->
                 val text = etFieldConfig.text.toString()
                 data.value.value = text
-                if (!hasFocus && !data.isValid(text)) {
+                if (!hasFocus) {
                     tilConfiField.error = data.errorText
-                    tilConfiField.isErrorEnabled = true
+                    tilConfiField.isErrorEnabled = !data.isValid(text)
                 }
             }
         }
