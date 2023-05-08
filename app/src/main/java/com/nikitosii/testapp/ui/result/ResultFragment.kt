@@ -4,6 +4,7 @@ import android.app.ActionBar.LayoutParams
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.text.InputFilter
 import android.text.InputType.TYPE_CLASS_NUMBER
 import android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD
 import android.text.InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE
@@ -13,6 +14,7 @@ import android.text.SpannableStringBuilder
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.NO_ID
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
@@ -22,6 +24,7 @@ import androidx.core.text.color
 import androidx.core.text.htmlEncode
 import androidx.core.view.get
 import androidx.core.view.setPadding
+import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.shape.MaterialShapeDrawable
@@ -134,7 +137,7 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
         it.configs.forEachIndexed { index, config ->
             val et = EditText(context)
             initViewBackground(et, config)
-            initViewsTextAttributes(et, config)
+
             initViewPadding(et, config)
             initShadow(et, config)
             initURLConfig(et, config)
@@ -143,15 +146,19 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
         }
         if ((it.configs.map { it.findValue(NEXT_RESPONDER) }.size == it.configs.size))
             it.configs.forEachIndexed { index, configData ->
-                initIdAndNextResponds(binding.clViewContainer.get(index) as EditText, configData)
+                initNextResponds(binding.clViewContainer[index] as EditText, configData)
             }
         if (it.configs.filter { it.findBoolean(FIRST_RESPONDER) }.size == 1)
             it.configs.forEachIndexed { index, configData ->
                 initViewFirstFocuce(binding.clViewContainer.get(index) as EditText, configData)
             }
+        it.configs.forEachIndexed{index, config ->
+            initViewsTextAttributes(index, binding.clViewContainer[index] as EditText, config)
+        }
     }
 
     private fun initViewSize(id: Int, v: View, config: ConfigData) {
+        val id = config.findIntOrElse(IDENTIFIER, id)
         v.id = id
         val displayMetrics = DisplayMetrics()
         activity?.windowManager?.defaultDisplay?.getMetrics(displayMetrics)
@@ -233,7 +240,7 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun initViewsTextAttributes(et: EditText, config: ConfigData) {
+    private fun initViewsTextAttributes(index: Int, et: EditText, config: ConfigData) {
         et.textAlignment = when (config.findValue(ALIGN)) {
             "left", "" -> TextView.TEXT_ALIGNMENT_TEXT_START
             "center" -> TextView.TEXT_ALIGNMENT_CENTER
@@ -283,8 +290,23 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
             et.typeface = font
         // TODO check what lines must do, looks like we need to initialize size
         et.setLines(config.findIntOrElse(LINES, 1))
-        if (et.isEnabled)
-            et.maxLines = config.findIntOrElse(MAX_STROKES, 1)
+        if (et.isEnabled) {
+            val maxStroke = config.findIntOrElse(MAX_STROKES, NOT_USABLE_NUMBER)
+            if (maxStroke != NOT_USABLE_NUMBER) {
+                et.filters = arrayOf(InputFilter.LengthFilter(maxStroke))
+                et.doOnTextChanged { text, _, _, _ ->
+                    if (text?.length == maxStroke)
+                        if (et.nextFocusDownId != NO_ID)
+                        binding.clViewContainer.findViewById<EditText>(et.nextFocusDownId)
+                            .requestFocus()
+                    else {
+                        if (index < binding.clViewContainer.childCount - 1)
+                            binding.clViewContainer[index + 1].requestFocus()
+                        }
+                }
+            }
+        }
+
         et.isVerticalScrollBarEnabled = config.findBoolean(SCROLL)
         et.setLineSpacing(config.findFloatOrElse(LINE_SPACE, 12.0f), 1.0f)
     }
@@ -355,9 +377,8 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
             et.requestFocus()
     }
 
-    private fun initIdAndNextResponds(et: EditText, config: ConfigData) {
-        et.id = config.findIntOrElse(IDENTIFIER, 0)
-        et.nextFocusDownId = config.findIntOrElse(NEXT_RESPONDER, 0)
+    private fun initNextResponds(et: EditText, config: ConfigData) {
+        et.nextFocusDownId = config.findIntOrElse(NEXT_RESPONDER, NO_ID)
     }
 
     companion object {
