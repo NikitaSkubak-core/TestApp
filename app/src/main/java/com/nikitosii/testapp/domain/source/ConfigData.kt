@@ -181,7 +181,7 @@ data class ConfigData(
             isValid = { it.isIntValid { true } }),
         Config(
             attributeText = IDENTIFIER,
-            attributeType = AttributeType.STRING,
+            attributeType = AttributeType.INT,
             errorText = "",
             isValid = { true }),
         Config(
@@ -346,11 +346,6 @@ data class ConfigData(
             errorText = "",
             isValid = { true }),
         Config(
-            attributeText = URL_TEXT_ALIGN,
-            attributeType = AttributeType.STRING,
-            errorText = "Only 3 options are possible: 'left', 'center' and 'right'",
-            isValid = { listOf("left", "center", "right").contains(it) }),
-        Config(
             attributeText = URL_TEXT_COLOR_RED,
             attributeType = AttributeType.INT,
             errorText = "",
@@ -369,36 +364,6 @@ data class ConfigData(
             attributeText = URL_TEXT_CONTENT,
             attributeType = AttributeType.STRING,
             errorText = "",
-            isValid = { true }),
-        Config(
-            attributeText = URL_TEXT_FONT,
-            attributeType = AttributeType.STRING,
-            errorText = "please put the value 'Steagal-Regular' or 'Steagal-Medium', or just leave empty",
-            isValid = { listOf("Steagal-Regular", "Steagal-Medium", "").contains(it) }),
-        Config(
-            attributeText = URL_TEXT_FONT_SIZE,
-            attributeType = AttributeType.INT,
-            errorText = "",
-            isValid = { it.isIntValid { it >= 0 } }),
-        Config(
-            attributeText = UNDERLINE_COLOR_RED,
-            attributeType = AttributeType.INT,
-            errorText = "",
-            isValid = { it.isIntValid { it in 0..255 } }),
-        Config(
-            attributeText = UNDERLINE_COLOR_GREEN,
-            attributeType = AttributeType.INT,
-            errorText = "",
-            isValid = { it.isIntValid { it in 0..255 } }),
-        Config(
-            attributeText = UNDERLINE_COLOR_BLUE,
-            attributeType = AttributeType.INT,
-            errorText = "",
-            isValid = { it.isIntValid { it in 0..255 } }),
-        Config(
-            attributeText = URL_UNDERLINE_THICKNESS,
-            attributeType = AttributeType.INT,
-            errorText = "",
-            isValid = { it.isIntValid { it >= 0 } })
-        )
+            isValid = { true })
+    )
 ): Parcelable

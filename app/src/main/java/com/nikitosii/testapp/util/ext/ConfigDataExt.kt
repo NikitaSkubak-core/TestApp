@@ -1,6 +1,5 @@
 package com.nikitosii.testapp.util.ext
 
-import android.content.res.ColorStateList
 import android.graphics.Color
 import com.nikitosii.testapp.domain.source.ConfigData
 
@@ -47,23 +46,6 @@ fun ConfigData.getColorHex(
     colorRed: String,
     colorGreen: String,
     colorBlue: String,
-    isNeedToCheck: Boolean = false,
-    defaultInt: Int = 0
-): String {
-    val colorRed = findIntOrElse(colorRed, defaultInt)
-    val colorGreen = findIntOrElse(colorGreen, defaultInt)
-    val colorBlue = findIntOrElse(colorBlue, defaultInt)
-    return if (isNeedToCheck) when (defaultInt) {
-        colorRed, colorGreen, colorBlue -> ""
-        else -> RGBToHex(colorRed, colorGreen, colorBlue)
-    } else RGBToHex(colorRed, colorGreen, colorBlue)
-}
-
-fun ConfigData.getColorHex(
-    colorRed: String,
-    colorGreen: String,
-    colorBlue: String,
-    alpha: Float,
     isNeedToCheck: Boolean = false,
     defaultInt: Int = 0
 ): String {

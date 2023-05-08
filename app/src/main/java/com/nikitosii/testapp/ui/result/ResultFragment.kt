@@ -1,7 +1,6 @@
 package com.nikitosii.testapp.ui.result
 
-import android.content.Context
-import android.content.res.ColorStateList
+import android.app.ActionBar.LayoutParams
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -10,10 +9,8 @@ import android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD
 import android.text.InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE
 import android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
 import android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
-import android.text.Spannable
-import android.text.SpannableString
 import android.text.SpannableStringBuilder
-import android.text.style.StyleSpan
+import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,8 +18,9 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.text.color
+import androidx.core.text.htmlEncode
+import androidx.core.view.get
 import androidx.core.view.setPadding
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.navArgs
@@ -48,15 +46,18 @@ import com.nikitosii.testapp.util.AttributeConstants.DEFAULT_TEXT
 import com.nikitosii.testapp.util.AttributeConstants.DEFAULT_TEXT_COLOR_BLUE
 import com.nikitosii.testapp.util.AttributeConstants.DEFAULT_TEXT_COLOR_GREEN
 import com.nikitosii.testapp.util.AttributeConstants.DEFAULT_TEXT_COLOR_RED
+import com.nikitosii.testapp.util.AttributeConstants.FIRST_RESPONDER
 import com.nikitosii.testapp.util.AttributeConstants.FONT
 import com.nikitosii.testapp.util.AttributeConstants.FONTSIZE
 import com.nikitosii.testapp.util.AttributeConstants.IDENTIFIER
 import com.nikitosii.testapp.util.AttributeConstants.INPUT
+import com.nikitosii.testapp.util.AttributeConstants.INPUT_FIELD_HEIGHT_DYNAMIC
 import com.nikitosii.testapp.util.AttributeConstants.KEYBOARD_TYPE
 import com.nikitosii.testapp.util.AttributeConstants.LEFT_PADDING
 import com.nikitosii.testapp.util.AttributeConstants.LINES
 import com.nikitosii.testapp.util.AttributeConstants.LINE_SPACE
 import com.nikitosii.testapp.util.AttributeConstants.MAX_STROKES
+import com.nikitosii.testapp.util.AttributeConstants.NEXT_RESPONDER
 import com.nikitosii.testapp.util.AttributeConstants.POSITION_X
 import com.nikitosii.testapp.util.AttributeConstants.POSITION_XREL
 import com.nikitosii.testapp.util.AttributeConstants.POSITION_Y
@@ -70,34 +71,30 @@ import com.nikitosii.testapp.util.AttributeConstants.SHADOW_COLOR_BLUE
 import com.nikitosii.testapp.util.AttributeConstants.SHADOW_COLOR_GREEN
 import com.nikitosii.testapp.util.AttributeConstants.SHADOW_COLOR_RED
 import com.nikitosii.testapp.util.AttributeConstants.SHADOW_HEIGHT
-import com.nikitosii.testapp.util.AttributeConstants.SHADOW_OPACITY
 import com.nikitosii.testapp.util.AttributeConstants.SHADOW_RADIUS
 import com.nikitosii.testapp.util.AttributeConstants.SHADOW_WIDTH
 import com.nikitosii.testapp.util.AttributeConstants.SIZE_HEIGHT
 import com.nikitosii.testapp.util.AttributeConstants.SIZE_MIN_HEIGHT
 import com.nikitosii.testapp.util.AttributeConstants.SIZE_MIN_WIDTH
 import com.nikitosii.testapp.util.AttributeConstants.SIZE_WIDTH
-import com.nikitosii.testapp.util.AttributeConstants.UNDERLINE_COLOR_BLUE
-import com.nikitosii.testapp.util.AttributeConstants.UNDERLINE_COLOR_GREEN
-import com.nikitosii.testapp.util.AttributeConstants.UNDERLINE_COLOR_RED
+import com.nikitosii.testapp.util.AttributeConstants.URL_LINK
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_COLOR_BLUE
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_COLOR_GREEN
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_COLOR_RED
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_CONTENT
 import com.nikitosii.testapp.util.annotation.RequiresViewModel
-import com.nikitosii.testapp.util.ext.RGBToHex
 import com.nikitosii.testapp.util.ext.findBoolean
 import com.nikitosii.testapp.util.ext.findFloatOrElse
 import com.nikitosii.testapp.util.ext.findIntOrElse
 import com.nikitosii.testapp.util.ext.findValue
 import com.nikitosii.testapp.util.ext.getColorHex
-import com.nikitosii.testapp.util.ext.getColorInt
 import com.nikitosii.testapp.util.ext.getColorState
 import com.nikitosii.testapp.util.ext.ifNegative
 import com.nikitosii.testapp.util.ext.isNotNull
 import com.nikitosii.testapp.util.ext.maxInt
 import com.nikitosii.testapp.util.ext.onClick
 import java.lang.Float.max
+
 
 @RequiresViewModel(ResultViewModel::class)
 class ResultFragment : BaseFragment<ResultViewModel>() {
@@ -134,19 +131,32 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private val fieldsConfigObserver: Observer<FieldsConfig> = Observer {
-        it.configs.forEach { config ->
+        it.configs.forEachIndexed { index, config ->
             val et = EditText(context)
             initViewBackground(et, config)
             initViewsTextAttributes(et, config)
-            initViewSize(et, config)
+            initViewPadding(et, config)
+            initShadow(et, config)
+            initURLConfig(et, config)
             binding.clViewContainer.addView(et)
-            initViewSize2(et, config)
+            initViewSize(index, et, config)
         }
+        if ((it.configs.map { it.findValue(NEXT_RESPONDER) }.size == it.configs.size))
+            it.configs.forEachIndexed { index, configData ->
+                initIdAndNextResponds(binding.clViewContainer.get(index) as EditText, configData)
+            }
+        if (it.configs.filter { it.findBoolean(FIRST_RESPONDER) }.size == 1)
+            it.configs.forEachIndexed { index, configData ->
+                initViewFirstFocuce(binding.clViewContainer.get(index) as EditText, configData)
+            }
     }
 
-    private fun initViewSize2(v: View, config: ConfigData) {
-        val maxCoordinatesX = binding.clViewContainer.width
-        val maxCoordinatesY = binding.clViewContainer.height
+    private fun initViewSize(id: Int, v: View, config: ConfigData) {
+        v.id = id
+        val displayMetrics = DisplayMetrics()
+        activity?.windowManager?.defaultDisplay?.getMetrics(displayMetrics)
+        val height = displayMetrics.heightPixels
+        val width = displayMetrics.widthPixels
         val valueX = config.findIntOrElse(POSITION_X, 0)
         val valueY = config.findIntOrElse(POSITION_Y, 0)
         val endX = config.findIntOrElse(SIZE_WIDTH, 200)
@@ -155,11 +165,13 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
         val minEndY = config.findIntOrElse(SIZE_MIN_HEIGHT, 200)
         val relativeX = config.findValue(POSITION_XREL)
         val relativeY = config.findValue(POSITION_YREL)
-
+        val isDynamicHeight = config.findBoolean(INPUT_FIELD_HEIGHT_DYNAMIC)
         val viewParams = v.layoutParams
         viewParams.width = maxInt(endX, minEndX)
         viewParams.height = maxInt(endY, minEndY)
         v.layoutParams = viewParams
+        v.minimumHeight = minEndY
+        v.minimumWidth = minEndX
         val set = ConstraintSet()
         set.clone(binding.clViewContainer)
         set.connect(
@@ -169,24 +181,27 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
             ConstraintSet.LEFT,
             when (relativeX) {
                 "", "left" -> valueX
-                "center" -> (maxCoordinatesX - valueX) / 2
-                "right" -> maxCoordinatesX + valueX
+                "center" -> (width - valueX) / 2
+                "right" -> width + valueX
                 else -> valueX
             }
         )
-        set.connect(
-            v.id,
-            ConstraintSet.TOP,
-            binding.clViewContainer.id,
-            ConstraintSet.TOP,
-            when (relativeY) {
-                "bottom" -> valueY
-                "center" -> (maxCoordinatesY - valueY)
-                "", "top" -> maxCoordinatesY + valueY
+        if (!isDynamicHeight) {
+            val coordinates = when (relativeY) {
+                "", "top" -> valueY
+                "center" -> (height - valueY) / 2
+                "bottom" -> height + valueY
                 else -> valueX
             }
-        )
-        set.applyTo(binding.clViewContainer)
+            set.connect(
+                v.id,
+                ConstraintSet.TOP,
+                binding.clViewContainer.id,
+                ConstraintSet.TOP,
+                coordinates
+            )
+            set.applyTo(binding.clViewContainer)
+        } else v.layoutParams.height = LayoutParams.WRAP_CONTENT
     }
 
     private fun initViewBackground(et: EditText, config: ConfigData) {
@@ -225,6 +240,7 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
             "right" -> TextView.TEXT_ALIGNMENT_TEXT_END
             else -> TextView.TEXT_ALIGNMENT_TEXT_START
         }
+        et.isVerticalScrollBarEnabled = config.findBoolean(SCROLL)
         et.id = config.findIntOrElse(IDENTIFIER, 0)
         val defaultText = config.findValue(DEFAULT_TEXT)
         val text = config.findValue(CONTENT)
@@ -254,9 +270,9 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
         et.textSize = config.findFloatOrElse(FONTSIZE, 28.0f)
         val isSecureType = config.findBoolean(SECURE_TEXT_ENTRY)
         et.inputType = when (config.findValue(KEYBOARD_TYPE)) {
-            "NumberPad" -> if (!isSecureType) TYPE_CLASS_NUMBER else TYPE_NUMBER_VARIATION_PASSWORD
-            "emailAddress" -> if (!isSecureType) TYPE_TEXT_VARIATION_EMAIL_ADDRESS else TYPE_TEXT_VARIATION_PASSWORD
-            else -> if (!isSecureType) TYPE_TEXT_FLAG_IME_MULTI_LINE else TYPE_TEXT_VARIATION_PASSWORD
+            "NumberPad" -> if (!isSecureType) TYPE_CLASS_NUMBER else TYPE_CLASS_NUMBER or TYPE_NUMBER_VARIATION_PASSWORD
+            "emailAddress" -> if (!isSecureType) TYPE_TEXT_VARIATION_EMAIL_ADDRESS else TYPE_TEXT_VARIATION_EMAIL_ADDRESS or TYPE_TEXT_VARIATION_PASSWORD
+            else -> if (!isSecureType) TYPE_TEXT_FLAG_IME_MULTI_LINE else TYPE_TEXT_FLAG_IME_MULTI_LINE or TYPE_TEXT_VARIATION_PASSWORD
         }
         val font = when (config.findValue(FONT)) {
             "Steagal-Regular" -> resources.getFont(R.font.insigne_steagal_regular)
@@ -271,11 +287,10 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
             et.maxLines = config.findIntOrElse(MAX_STROKES, 1)
         et.isVerticalScrollBarEnabled = config.findBoolean(SCROLL)
         et.setLineSpacing(config.findFloatOrElse(LINE_SPACE, 12.0f), 1.0f)
-        et.setText("View text attribute checkasdad sda sdda dasda das asda d ada s daas dasad ad as daa da d")
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun initViewSize(et: EditText, config: ConfigData) {
+    private fun initViewPadding(et: EditText, config: ConfigData) {
 
         val rimPadding = config.findIntOrElse(RIM_PADDING, 0)
         val leftPadding = config.findIntOrElse(LEFT_PADDING, NOT_USABLE_NUMBER)
@@ -288,9 +303,7 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
             rimPadding,
             bottomPadding.ifNegative(rimPadding)
         )
-        initShadow(et, config)
-//        initUnderlineColor(et, config)
-//        initURLConfig(et, config)
+
     }
 
     private fun initShadow(et: EditText, config: ConfigData) {
@@ -299,69 +312,52 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
         val minShadowWidth = config.findFloatOrElse(SHADOW_WIDTH, 0.0f)
         val minShadowHeight = config.findFloatOrElse(SHADOW_HEIGHT, 0.0f)
         et.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
-        et.setShadowLayer(
-            config.findFloatOrElse(SHADOW_RADIUS, 0.0f),
-            max(shadowWidth, minShadowWidth),
-            max(shadowHeight, minShadowHeight),
-            Color.parseColor(
-                config.getColorHex(
-                    SHADOW_COLOR_RED,
-                    SHADOW_COLOR_GREEN,
-                    SHADOW_COLOR_BLUE
-                )
+        val color = config.getColorHex(
+            SHADOW_COLOR_RED,
+            SHADOW_COLOR_GREEN,
+            SHADOW_COLOR_BLUE
+        )
+        if (color.isNotEmpty())
+            et.setShadowLayer(
+                config.findFloatOrElse(SHADOW_RADIUS, 0.0f),
+                max(shadowWidth, minShadowWidth),
+                max(shadowHeight, minShadowHeight),
+                Color.parseColor(color)
             )
-        )
-    }
-
-    private fun initUnderlineColor(et: EditText, config: ConfigData) {
-        val color = config.getColorInt(
-            UNDERLINE_COLOR_RED,
-            UNDERLINE_COLOR_GREEN,
-            UNDERLINE_COLOR_BLUE,
-            "1",
-            true,
-            NOT_USABLE_NUMBER
-        )
-        if (color != -1)
-            et.backgroundTintList = ColorStateList.valueOf(color)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun initURLConfig(et: EditText, config: ConfigData) {
-        val colorInt = config.getColorInt(
+        val colorInt = config.getColorHex(
             URL_TEXT_COLOR_RED,
             URL_TEXT_COLOR_GREEN,
             URL_TEXT_COLOR_BLUE,
-            "1",
             true,
             NOT_USABLE_NUMBER
         )
-        if (colorInt != NOT_USABLE_NUMBER) {
-            val color = ColorStateList.valueOf(colorInt)
+        if (colorInt.isNotEmpty()) {
+            val color = getColorState(colorInt)
             et.setLinkTextColor(color)
-            val urlText = " ${config.findValue(URL_TEXT_CONTENT)}"
-            val text = et.text.toString()
-            val font = when (config.findValue(FONT)) {
-                "Steagal-Regular" -> R.font.insigne_steagal_regular
-                "Steagal-Medium" -> R.font.insigne_steagal_medium
-                else -> null
-            }
-            val res = SpannableStringBuilder().apply {
-                append(text)
-                color(colorInt) {
-                    append(urlText)
+            val url = config.findValue(URL_LINK)
+            val text = config.findValue(URL_TEXT_CONTENT)
+            et.text = SpannableStringBuilder().apply {
+                if (text.isNotEmpty()) append("<a href='$url'>$text</a>".htmlEncode())
+                else append(" $url")
+                color(Color.parseColor(colorInt)) {
+                    append(url)
                 }
             }
-            if (font.isNotNull()) {
-                val spannableString = SpannableString(res)
-                val typeface = ResourcesCompat.getFont(requireContext(), font!!)
-                spannableString.setSpan(
-                    StyleSpan(typeface!!.style),
-                    res.indexOf(urlText), res.length - 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-                et.setText(spannableString)
-            }
         }
+    }
+
+    private fun initViewFirstFocuce(et: EditText, config: ConfigData) {
+        if (config.findBoolean(FIRST_RESPONDER))
+            et.requestFocus()
+    }
+
+    private fun initIdAndNextResponds(et: EditText, config: ConfigData) {
+        et.id = config.findIntOrElse(IDENTIFIER, 0)
+        et.nextFocusDownId = config.findIntOrElse(NEXT_RESPONDER, 0)
     }
 
     companion object {
