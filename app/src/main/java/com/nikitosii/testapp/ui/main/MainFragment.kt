@@ -1,20 +1,25 @@
 package com.nikitosii.testapp.ui.main
 
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import androidx.core.view.children
+import androidx.core.view.get
+import androidx.core.widget.doOnTextChanged
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import com.nikitosii.testapp.databinding.FragmentMainBinding
+import com.nikitosii.testapp.domain.source.AttributeType
 import com.nikitosii.testapp.ui.base.BaseFragment
 import com.nikitosii.testapp.util.annotation.RequiresViewModel
+import com.nikitosii.testapp.util.ext.isNotNull
 import com.nikitosii.testapp.util.ext.onClick
 
 @RequiresViewModel(MainViewModel::class)
 class MainFragment : BaseFragment<MainViewModel>() {
     private lateinit var binding: FragmentMainBinding
-    private val adapter by lazy { TextFieldConfigAdapter() }
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -33,26 +38,65 @@ class MainFragment : BaseFragment<MainViewModel>() {
 
     private fun initViews() {
         with(binding) {
-            rvConfig.adapter = adapter
-            rvConfig.adapter = adapter
-            rvConfig.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
             btnGo.onClick {
-                if ((viewModel.counter.value ?: 0) < 3)
-                    updateAdapterList()
-                else openResult()
+                val maxCount = viewModel.fieldsConfig.value?.configs?.size
+                if (maxCount.isNotNull())
+                    if ((viewModel.counter.value ?: 0) < maxCount!!)
+                        updateList()
+                    else openResult()
             }
         }
     }
 
     private fun subscribe() {
-        updateAdapterList()
+        with(viewModel) {
+            isGotBack.observe(viewLifecycleOwner) {
+                if (it) {
+                    resetData()
+                    isGotBack.value = false
+                }
+            }
+        }
+        viewModel.getListOfConfigs().forEach {
+            val layout = TextInputLayout(requireContext())
+            val et = TextInputEditText(requireContext())
+            et.textSize = 15.0f
+            val inputType = when (it.attributeType) {
+                AttributeType.INT, AttributeType.BOOLEAN -> InputType.TYPE_CLASS_NUMBER
+                AttributeType.DOUBLE -> InputType.TYPE_NUMBER_FLAG_DECIMAL
+                else -> null
+            }
+            if (inputType.isNotNull())
+                et.inputType = inputType!!
+            layout.hint = it.attributeText
+            et.doOnTextChanged { text, _, _, _ ->
+                it.value = text.toString()
+                layout.error = it.errorText
+                layout.isErrorEnabled = !it.isValid(text.toString())
+                binding.btnGo.isEnabled = it.isValid(text.toString())
+            }
+            layout.addView(et)
+            binding.llContainer.addView(layout)
+        }
+        binding.llContainer.children.forEach {
+            val layout = it as TextInputLayout
+            val params = layout.layoutParams
+            params.height = 300
+            layout.layoutParams = params
+            val child = layout.get(0)
+            val childParams = child.layoutParams
+            childParams.height = 230
+        }
     }
 
-    private fun updateAdapterList() {
-        adapter.submitList(viewModel.getListOfConfigs())
+
+    private fun updateList() {
+        binding.llContainer.removeAllViews()
+        subscribe()
     }
 
     private fun openResult() {
-        MainFragmentDirections.showResult(viewModel.fieldsConfig)
+        viewModel.fieldsConfig.value?.let { MainFragmentDirections.showResult(it).navigate() }
+        viewModel.isGotBack.value = true
     }
 }

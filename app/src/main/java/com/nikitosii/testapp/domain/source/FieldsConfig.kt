@@ -5,5 +5,5 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class FieldsConfig(
-    val configs: List<ConfigData> = listOf(ConfigData(), ConfigData(), ConfigData())
+    val configs: List<ConfigData> = listOf(ConfigData())
 ) : Parcelable
