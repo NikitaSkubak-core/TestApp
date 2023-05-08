@@ -30,3 +30,4 @@ fun String.toFloatOrElse(value: Float): Float {
 fun RGBToHex(red : Int, green : Int, blue : Int): String {
     return String.format("#%02x%02x%02x", red, green, blue)
 }
+

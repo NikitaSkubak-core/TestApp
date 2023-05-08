@@ -66,6 +66,7 @@ import com.nikitosii.testapp.util.AttributeConstants.RIGHT_PADDING
 import com.nikitosii.testapp.util.AttributeConstants.RIM_PADDING
 import com.nikitosii.testapp.util.AttributeConstants.SCROLL
 import com.nikitosii.testapp.util.AttributeConstants.SECURE_TEXT_ENTRY
+import com.nikitosii.testapp.util.AttributeConstants.SHADOW_COLOR_BLUE
 import com.nikitosii.testapp.util.AttributeConstants.SHADOW_COLOR_GREEN
 import com.nikitosii.testapp.util.AttributeConstants.SHADOW_COLOR_RED
 import com.nikitosii.testapp.util.AttributeConstants.SHADOW_HEIGHT
@@ -84,6 +85,7 @@ import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_COLOR_GREEN
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_COLOR_RED
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_CONTENT
 import com.nikitosii.testapp.util.annotation.RequiresViewModel
+import com.nikitosii.testapp.util.ext.RGBToHex
 import com.nikitosii.testapp.util.ext.findBoolean
 import com.nikitosii.testapp.util.ext.findFloatOrElse
 import com.nikitosii.testapp.util.ext.findIntOrElse
@@ -184,7 +186,7 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
                 else -> valueX
             }
         )
-            set.applyTo(binding.clViewContainer)
+        set.applyTo(binding.clViewContainer)
     }
 
     private fun initViewBackground(et: EditText, config: ConfigData) {
@@ -209,7 +211,7 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
         if (borderWidth != 0.0f && borderColor.isNotEmpty())
             drawable.setStroke(
                 borderWidth,
-                getColorState(borderColor)
+                getColorState(borderColor).defaultColor
             )
         et.background = drawable
         et.setText("Test background")
@@ -286,7 +288,7 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
             rimPadding,
             bottomPadding.ifNegative(rimPadding)
         )
-//        initShadow(et, config)
+        initShadow(et, config)
 //        initUnderlineColor(et, config)
 //        initURLConfig(et, config)
     }
@@ -296,15 +298,17 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
         val shadowHeight = config.findFloatOrElse(SHADOW_HEIGHT, 0.0f)
         val minShadowWidth = config.findFloatOrElse(SHADOW_WIDTH, 0.0f)
         val minShadowHeight = config.findFloatOrElse(SHADOW_HEIGHT, 0.0f)
+        et.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
         et.setShadowLayer(
             config.findFloatOrElse(SHADOW_RADIUS, 0.0f),
             max(shadowWidth, minShadowWidth),
             max(shadowHeight, minShadowHeight),
-            config.getColorInt(
-                SHADOW_COLOR_RED,
-                SHADOW_COLOR_GREEN,
-                SHADOW_COLOR_GREEN,
-                config.findValue(SHADOW_OPACITY)
+            Color.parseColor(
+                config.getColorHex(
+                    SHADOW_COLOR_RED,
+                    SHADOW_COLOR_GREEN,
+                    SHADOW_COLOR_BLUE
+                )
             )
         )
     }
@@ -362,22 +366,5 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
 
     companion object {
         const val NOT_USABLE_NUMBER = -1
-    }
-
-    fun setCustomFontTypeSpan(
-        context: Context,
-        source: String?,
-        startIndex: Int,
-        endIndex: Int,
-        font: Int,
-        color: Int
-    ): SpannableString {
-        val spannableString = SpannableString(source)
-        val typeface = ResourcesCompat.getFont(context, font)
-        spannableString.setSpan(
-            StyleSpan(typeface!!.style),
-            startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
-        return spannableString
     }
 }
