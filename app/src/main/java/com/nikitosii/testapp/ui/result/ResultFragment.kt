@@ -20,6 +20,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.text.color
 import androidx.core.view.setPadding
@@ -134,10 +135,56 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
         it.configs.forEach { config ->
             val et = EditText(context)
             initViewBackground(et, config)
-//            initViewsTextAttributes(et, config)
-//            initViewSize(et, config)
+            initViewsTextAttributes(et, config)
+            initViewSize(et, config)
             binding.clViewContainer.addView(et)
+            initViewSize2(et, config)
         }
+    }
+
+    private fun initViewSize2(v: View, config: ConfigData) {
+        val maxCoordinatesX = binding.clViewContainer.width
+        val maxCoordinatesY = binding.clViewContainer.height
+        val valueX = config.findIntOrElse(POSITION_X, 0)
+        val valueY = config.findIntOrElse(POSITION_Y, 0)
+        val endX = config.findIntOrElse(SIZE_WIDTH, 200)
+        val endY = config.findIntOrElse(SIZE_HEIGHT, 200)
+        val minEndX = config.findIntOrElse(SIZE_MIN_WIDTH, 200)
+        val minEndY = config.findIntOrElse(SIZE_MIN_HEIGHT, 200)
+        val relativeX = config.findValue(POSITION_XREL)
+        val relativeY = config.findValue(POSITION_YREL)
+
+        val viewParams = v.layoutParams
+        viewParams.width = maxInt(endX, minEndX)
+        viewParams.height = maxInt(endY, minEndY)
+        v.layoutParams = viewParams
+        val set = ConstraintSet()
+        set.clone(binding.clViewContainer)
+        set.connect(
+            v.id,
+            ConstraintSet.LEFT,
+            binding.clViewContainer.id,
+            ConstraintSet.LEFT,
+            when (relativeX) {
+                "", "left" -> valueX
+                "center" -> (maxCoordinatesX - valueX) / 2
+                "right" -> maxCoordinatesX + valueX
+                else -> valueX
+            }
+        )
+        set.connect(
+            v.id,
+            ConstraintSet.TOP,
+            binding.clViewContainer.id,
+            ConstraintSet.TOP,
+            when (relativeY) {
+                "bottom" -> valueY
+                "center" -> (maxCoordinatesY - valueY)
+                "", "top" -> maxCoordinatesY + valueY
+                else -> valueX
+            }
+        )
+            set.applyTo(binding.clViewContainer)
     }
 
     private fun initViewBackground(et: EditText, config: ConfigData) {
@@ -160,9 +207,9 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
         )
         val borderWidth = config.findFloatOrElse(BORDER_WIDTH, 0.0f)
         if (borderWidth != 0.0f && borderColor.isNotEmpty())
-        drawable.setStroke(
-            borderWidth,
-            getColorState(borderColor)
+            drawable.setStroke(
+                borderWidth,
+                getColorState(borderColor)
             )
         et.background = drawable
         et.setText("Test background")
@@ -183,28 +230,26 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
         if (!isInputType) {
             et.setText(defaultText.ifEmpty { text })
         }
-        val defaultTextColor = config.getColorInt(
+        val defaultTextColor = config.getColorHex(
             DEFAULT_TEXT_COLOR_RED,
             DEFAULT_TEXT_COLOR_GREEN,
             DEFAULT_TEXT_COLOR_BLUE,
-            "1",
             true,
             NOT_USABLE_NUMBER
         )
-        val textColor = config.getColorInt(
+        val textColor = config.getColorHex(
             COLOR_RED,
             COLOR_GREEN,
             COLOR_BLUE,
-            "1",
             true,
             NOT_USABLE_NUMBER
         )
         when (true) {
-            (defaultTextColor != NOT_USABLE_NUMBER) -> et.setTextColor(defaultTextColor)
-            (textColor != NOT_USABLE_NUMBER) -> et.setTextColor(textColor)
+            (defaultTextColor.isNotEmpty()) -> et.setTextColor(getColorState(defaultTextColor))
+            (textColor.isNotEmpty()) -> et.setTextColor(getColorState(textColor))
             else -> {}
         }
-        et.textSize = config.findFloatOrElse(FONTSIZE, 14.0f)
+        et.textSize = config.findFloatOrElse(FONTSIZE, 28.0f)
         val isSecureType = config.findBoolean(SECURE_TEXT_ENTRY)
         et.inputType = when (config.findValue(KEYBOARD_TYPE)) {
             "NumberPad" -> if (!isSecureType) TYPE_CLASS_NUMBER else TYPE_NUMBER_VARIATION_PASSWORD
@@ -218,11 +263,13 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
         }
         if (font.isNotNull())
             et.typeface = font
-        et.setLines(config.findIntOrElse(LINES, 0))
+        // TODO check what lines must do, looks like we need to initialize size
+        et.setLines(config.findIntOrElse(LINES, 1))
         if (et.isEnabled)
-            et.maxLines = config.findIntOrElse(MAX_STROKES, 0)
+            et.maxLines = config.findIntOrElse(MAX_STROKES, 1)
         et.isVerticalScrollBarEnabled = config.findBoolean(SCROLL)
-        et.setLineSpacing(config.findFloatOrElse(LINE_SPACE, 0.0f), 1.0f)
+        et.setLineSpacing(config.findFloatOrElse(LINE_SPACE, 12.0f), 1.0f)
+        et.setText("View text attribute checkasdad sda sdda dasda das asda d ada s daas dasad ad as daa da d")
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -239,50 +286,9 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
             rimPadding,
             bottomPadding.ifNegative(rimPadding)
         )
-
-        val maxCoordinatesX = binding.clViewContainer.width
-        val maxCoordinatesY = binding.clViewContainer.height
-        val valueX = config.findIntOrElse(POSITION_X, 0)
-        val valueY = config.findIntOrElse(POSITION_Y, 0)
-        val endX = config.findIntOrElse(SIZE_WIDTH, 200)
-        val endY = config.findIntOrElse(SIZE_HEIGHT, 200)
-        val minEndX = config.findIntOrElse(SIZE_MIN_WIDTH, 200)
-        val minEndY = config.findIntOrElse(SIZE_MIN_HEIGHT, 200)
-        val relativeX = config.findValue(POSITION_XREL)
-        val relativeY = config.findValue(POSITION_YREL)
-        when (relativeX) {
-            "", "left" -> {
-                et.left = valueX; et.right = maxInt(endX, minEndX)
-            }
-
-            "center" -> {
-                et.left = (maxCoordinatesX - valueX) / 2
-                et.right = (maxCoordinatesX + maxInt(endX, minEndX)) / 2
-            }
-
-            "right" -> {
-                et.left = maxCoordinatesX + valueX
-                et.right = maxCoordinatesX + valueX + maxInt(endX, minEndX)
-            }
-        }
-        when (relativeY) {
-            "bottom" -> {
-                et.top = valueY; et.bottom = maxInt(endY, minEndY)
-            }
-
-            "center" -> {
-                et.top = (maxCoordinatesY - valueY) / 2
-                et.bottom = (maxCoordinatesY + maxInt(endY, minEndY)) / 2
-            }
-
-            "", "top" -> {
-                et.top = maxCoordinatesY + valueY
-                et.bottom = maxCoordinatesY - maxInt(endY, minEndY)
-            }
-        }
-        initShadow(et, config)
-        initUnderlineColor(et, config)
-        initURLConfig(et, config)
+//        initShadow(et, config)
+//        initUnderlineColor(et, config)
+//        initURLConfig(et, config)
     }
 
     private fun initShadow(et: EditText, config: ConfigData) {
@@ -319,13 +325,13 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun initURLConfig(et: EditText, config: ConfigData) {
         val colorInt = config.getColorInt(
-                URL_TEXT_COLOR_RED,
-                URL_TEXT_COLOR_GREEN,
-                URL_TEXT_COLOR_BLUE,
-                "1",
-                true,
-                NOT_USABLE_NUMBER
-            )
+            URL_TEXT_COLOR_RED,
+            URL_TEXT_COLOR_GREEN,
+            URL_TEXT_COLOR_BLUE,
+            "1",
+            true,
+            NOT_USABLE_NUMBER
+        )
         if (colorInt != NOT_USABLE_NUMBER) {
             val color = ColorStateList.valueOf(colorInt)
             et.setLinkTextColor(color)
