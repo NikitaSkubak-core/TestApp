@@ -279,12 +279,12 @@ data class ConfigData(
             attributeText = SIZE_HEIGHT,
             attributeType = AttributeType.BOOLEAN,
             errorText = "value must be numeric, >= 0 or empty",
-            isValid = { it.isIntValid {  it >= 0} }),
+            isValid = { it.isIntValid { it >= 0 } }),
         Config(
             attributeText = SIZE_MIN_WIDTH,
             attributeType = AttributeType.BOOLEAN,
             errorText = "value must be numeric, >= 0 or empty",
-            isValid = { it.isIntValid { it >= 0} }),
+            isValid = { it.isIntValid { it >= 0 } }),
         Config(
             attributeText = SIZE_MIN_HEIGHT,
             attributeType = AttributeType.BOOLEAN,
@@ -364,6 +364,17 @@ data class ConfigData(
             attributeText = URL_TEXT_CONTENT,
             attributeType = AttributeType.STRING,
             errorText = "",
-            isValid = { true })
-    )
-): Parcelable
+            isValid = { true }),
+        Config(
+            attributeText = URL_TEXT_FONT,
+            attributeType = AttributeType.STRING,
+            errorText = "please put the value 'Steagal-Regular' or 'Steagal-Medium', or just leave empty",
+            isValid = { listOf("Steagal-Regular", "Steagal-Medium", "").contains(it) }),
+        Config(
+            attributeText = URL_TEXT_FONT_SIZE,
+            attributeType = AttributeType.INT,
+            errorText = "",
+            isValid = { it.isIntValid { it >= 0 } }),
+
+        )
+) : Parcelable

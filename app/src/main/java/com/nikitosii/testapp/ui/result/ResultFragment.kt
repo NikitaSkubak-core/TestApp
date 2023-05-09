@@ -2,15 +2,23 @@ package com.nikitosii.testapp.ui.result
 
 import android.app.ActionBar.LayoutParams
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
+import android.text.Html
 import android.text.InputFilter
 import android.text.InputType.TYPE_CLASS_NUMBER
 import android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD
 import android.text.InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE
 import android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
 import android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+import android.text.SpannableString
 import android.text.SpannableStringBuilder
+import android.text.Spanned.SPAN_INCLUSIVE_INCLUSIVE
+import android.text.TextUtils
+import android.text.style.AbsoluteSizeSpan
+import android.text.style.RelativeSizeSpan
+import android.text.style.TypefaceSpan
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
 import android.view.View
@@ -20,8 +28,8 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.text.color
-import androidx.core.text.htmlEncode
 import androidx.core.view.get
 import androidx.core.view.setPadding
 import androidx.core.widget.doOnTextChanged
@@ -85,6 +93,8 @@ import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_COLOR_BLUE
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_COLOR_GREEN
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_COLOR_RED
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_CONTENT
+import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_FONT
+import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_FONT_SIZE
 import com.nikitosii.testapp.util.annotation.RequiresViewModel
 import com.nikitosii.testapp.util.ext.findBoolean
 import com.nikitosii.testapp.util.ext.findFloatOrElse
@@ -140,7 +150,6 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
 
             initViewPadding(et, config)
             initShadow(et, config)
-            initURLConfig(et, config)
             binding.clViewContainer.addView(et)
             initViewSize(index, et, config)
         }
@@ -152,8 +161,9 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
             it.configs.forEachIndexed { index, configData ->
                 initViewFirstFocuce(binding.clViewContainer.get(index) as EditText, configData)
             }
-        it.configs.forEachIndexed{index, config ->
+        it.configs.forEachIndexed { index, config ->
             initViewsTextAttributes(index, binding.clViewContainer[index] as EditText, config)
+            initURLConfig(binding.clViewContainer[index] as EditText, config)
         }
     }
 
@@ -236,7 +246,6 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
                 getColorState(borderColor).defaultColor
             )
         et.background = drawable
-        et.setText("Test background")
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -297,11 +306,11 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
                 et.doOnTextChanged { text, _, _, _ ->
                     if (text?.length == maxStroke)
                         if (et.nextFocusDownId != NO_ID)
-                        binding.clViewContainer.findViewById<EditText>(et.nextFocusDownId)
-                            .requestFocus()
-                    else {
-                        if (index < binding.clViewContainer.childCount - 1)
-                            binding.clViewContainer[index + 1].requestFocus()
+                            binding.clViewContainer.findViewById<EditText>(et.nextFocusDownId)
+                                .requestFocus()
+                        else {
+                            if (index < binding.clViewContainer.childCount - 1)
+                                binding.clViewContainer[index + 1].requestFocus()
                         }
                 }
             }
@@ -350,25 +359,47 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun initURLConfig(et: EditText, config: ConfigData) {
-        val colorInt = config.getColorHex(
+        val colorHex = config.getColorHex(
             URL_TEXT_COLOR_RED,
             URL_TEXT_COLOR_GREEN,
             URL_TEXT_COLOR_BLUE,
             true,
             NOT_USABLE_NUMBER
         )
-        if (colorInt.isNotEmpty()) {
-            val color = getColorState(colorInt)
-            et.setLinkTextColor(color)
+        if (colorHex.isNotEmpty()) {
             val url = config.findValue(URL_LINK)
-            val text = config.findValue(URL_TEXT_CONTENT)
-            et.text = SpannableStringBuilder().apply {
-                if (text.isNotEmpty()) append("<a href='$url'>$text</a>".htmlEncode())
-                else append(" $url")
-                color(Color.parseColor(colorInt)) {
-                    append(url)
-                }
+            val text = config.findValue(URL_TEXT_CONTENT).ifEmpty { url }
+            val etText = et.text
+            var spannedText = SpannableString(etText)
+            val additionalInfo =
+                Html.fromHtml("<font color='$colorHex'><a href='$url'>$text</a></font>")
+            val resText = TextUtils.concat(spannedText, additionalInfo)
+            spannedText = SpannableString(resText)
+            spannedText.setSpan(
+                RelativeSizeSpan(
+                    config.findFloatOrElse(
+                        URL_TEXT_FONT_SIZE,
+                        28.0f
+                    ) / config.findFloatOrElse(FONT, 28.0f)
+                ),
+                etText.length,
+                resText.length,
+                SPAN_INCLUSIVE_INCLUSIVE
+            )
+            val font = when (config.findValue(URL_TEXT_FONT)) {
+                "Steagal-Regular" -> R.font.insigne_steagal_regular
+                "Steagal-Medium" -> R.font.insigne_steagal_medium
+                else -> null
             }
+            if (font.isNotNull()) {
+                val fontType = ResourcesCompat.getFont(requireContext(), font!!)
+                spannedText.setSpan(
+                    TypefaceSpan(fontType!!), etText.length,
+                    resText.length,
+                    SPAN_INCLUSIVE_INCLUSIVE
+                )
+            }
+            et.setText(spannedText)
         }
     }
 
