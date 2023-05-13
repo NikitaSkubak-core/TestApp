@@ -46,8 +46,6 @@ import com.nikitosii.testapp.util.AttributeConstants.SHADOW_COLOR_RED
 import com.nikitosii.testapp.util.AttributeConstants.SHADOW_HEIGHT
 import com.nikitosii.testapp.util.AttributeConstants.SHADOW_MIN_HEIGHT
 import com.nikitosii.testapp.util.AttributeConstants.SHADOW_MIN_WIDTH
-import com.nikitosii.testapp.util.AttributeConstants.SHADOW_OFFSET
-import com.nikitosii.testapp.util.AttributeConstants.SHADOW_OPACITY
 import com.nikitosii.testapp.util.AttributeConstants.SHADOW_RADIUS
 import com.nikitosii.testapp.util.AttributeConstants.SHADOW_WIDTH
 import com.nikitosii.testapp.util.AttributeConstants.SIZE_HEIGHT
@@ -55,17 +53,12 @@ import com.nikitosii.testapp.util.AttributeConstants.SIZE_MIN_HEIGHT
 import com.nikitosii.testapp.util.AttributeConstants.SIZE_MIN_WIDTH
 import com.nikitosii.testapp.util.AttributeConstants.SIZE_WIDTH
 import com.nikitosii.testapp.util.AttributeConstants.URL_LINK
-import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_ALIGN
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_COLOR_BLUE
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_COLOR_GREEN
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_COLOR_RED
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_CONTENT
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_FONT
 import com.nikitosii.testapp.util.AttributeConstants.URL_TEXT_FONT_SIZE
-import com.nikitosii.testapp.util.AttributeConstants.UNDERLINE_COLOR_BLUE
-import com.nikitosii.testapp.util.AttributeConstants.UNDERLINE_COLOR_GREEN
-import com.nikitosii.testapp.util.AttributeConstants.UNDERLINE_COLOR_RED
-import com.nikitosii.testapp.util.AttributeConstants.URL_UNDERLINE_THICKNESS
 import com.nikitosii.testapp.util.ext.isDoubleValid
 import com.nikitosii.testapp.util.ext.isIntValid
 import kotlinx.parcelize.Parcelize
@@ -305,16 +298,6 @@ data class ConfigData(
             attributeType = AttributeType.INT,
             errorText = "value must be numeric, from 0 to 255 or empty",
             isValid = { it.isIntValid { it in 0..255 } }),
-        Config(
-            attributeText = SHADOW_OFFSET,
-            attributeType = AttributeType.INT,
-            errorText = "value must be numeric or empty",
-            isValid = { it.isIntValid { it >= 0 } }),
-        Config(
-            attributeText = SHADOW_OPACITY,
-            attributeType = AttributeType.DOUBLE,
-            errorText = "value must be numeric or empty",
-            isValid = { it.isDoubleValid { it >= 0 } }),
         Config(
             attributeText = SHADOW_RADIUS,
             attributeType = AttributeType.INT,

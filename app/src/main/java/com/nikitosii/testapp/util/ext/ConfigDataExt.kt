@@ -1,7 +1,8 @@
 package com.nikitosii.testapp.util.ext
 
-import android.graphics.Color
 import com.nikitosii.testapp.domain.source.ConfigData
+import com.nikitosii.testapp.domain.source.FieldsConfig
+import com.nikitosii.testapp.util.AttributeConstants
 
 fun ConfigData.findIntOrElse(filter: String, value: Int): Int {
     return data.first { it.attributeText == filter }.value.toIntOrElse(value)
@@ -24,30 +25,12 @@ fun ConfigData.findBoolean(filter: String): Boolean {
     return value == 1
 }
 
-fun ConfigData.getColorInt(
-    colorRed: String,
-    colorGreen: String,
-    colorBlue: String,
-    alpha: String = "1",
-    isNeedToCheck: Boolean = false,
-    defaultInt: Int = 0
-): Int {
-    val colorRed = findIntOrElse(colorRed, defaultInt)
-    val colorGreen = findIntOrElse(colorGreen, defaultInt)
-    val colorBlue = findIntOrElse(colorBlue, defaultInt)
-    val alpha = (alpha.toFloatOrElse(1.0f) * 255 / 100).toInt()
-    return if (isNeedToCheck) when (defaultInt) {
-        colorRed, colorGreen, colorBlue -> -1
-        else -> Color.argb(alpha, colorRed, colorGreen, colorBlue)
-    } else Color.argb(alpha, colorRed, colorGreen, colorBlue)
-}
-
 fun ConfigData.getColorHex(
     colorRed: String,
     colorGreen: String,
     colorBlue: String,
     isNeedToCheck: Boolean = false,
-    defaultInt: Int = 0
+    defaultInt: Int = -1
 ): String {
     val colorRed = findIntOrElse(colorRed, defaultInt)
     val colorGreen = findIntOrElse(colorGreen, defaultInt)
@@ -57,3 +40,6 @@ fun ConfigData.getColorHex(
         else -> RGBToHex(colorRed, colorGreen, colorBlue)
     } else RGBToHex(colorRed, colorGreen, colorBlue)
 }
+
+fun checkConfig(data: FieldsConfig, filter: String, count: Int): Boolean =
+    data.configs.filter { it.findValue(filter).isNotEmpty() }.size == count

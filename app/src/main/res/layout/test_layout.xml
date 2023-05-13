@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:layout_height="match_parent">
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="The developer might tend to leave this task to the system and just display what comes automatically. Of course, certain built-in system functions must be used to calculate the result, but we want to point out that the result of this calculation (the frame size) must be provided by the app internally. Then, once available, it is applied to Height and Width of the Size Attributes. So, the Height value can be defined with 0 but after the calculation, it is set to (for example) 124. This value is important for the overall approach. Here one of many reasons:
+•	In this simplified request our 3 text fields in the result screen are positioned individually. However, imagine that the position of the lower text field is depending on the height of the middle text field, which has a flexible height defined with 0. Then the size result (as the above sample value of 124) is relevant for the correct positioning of the lower text field."
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        android:inputType="textMultiLine"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
