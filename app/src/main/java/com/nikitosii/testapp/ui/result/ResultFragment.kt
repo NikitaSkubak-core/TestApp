@@ -1,6 +1,7 @@
 package com.nikitosii.testapp.ui.result
 
 import android.app.ActionBar.LayoutParams
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -75,7 +76,8 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
 
     private fun initViews() {
         binding.btnBack.onClick {
-            navController.popBackStack() }
+            navController.popBackStack()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -89,6 +91,7 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
     private val fieldsConfigObserver: Observer<FieldsConfig> = Observer {
         it.configs.forEachIndexed { index, config ->
             val et = EditText(context)
+            et.setBackgroundColor(Color.TRANSPARENT)
             et.setBackground(config)
             et.setPadding(config)
             et.setShadow(config)
@@ -147,21 +150,20 @@ class ResultFragment : BaseFragment<ResultViewModel>() {
         if (isDynamicHeight || endY == 0) {
             viewParams.height = LayoutParams.WRAP_CONTENT
             v.layoutParams = viewParams
-        } else {
-            val coordinates = when (relativeY) {
-                "", "top" -> valueY
-                "center" -> height / 2 - valueY
-                "bottom" -> height + valueY
-                else -> valueX
-            }
-            set.connect(
-                v.id,
-                ConstraintSet.TOP,
-                binding.clViewContainer.id,
-                ConstraintSet.TOP,
-                coordinates
-            )
         }
+        val coordinates = when (relativeY) {
+            "", "top" -> valueY
+            "center" -> height / 2 - valueY
+            "bottom" -> height + valueY
+            else -> valueX
+        }
+        set.connect(
+            v.id,
+            ConstraintSet.TOP,
+            binding.clViewContainer.id,
+            ConstraintSet.TOP,
+            coordinates
+        )
         set.applyTo(binding.clViewContainer)
     }
 

@@ -10,6 +10,7 @@ import androidx.core.view.get
 import androidx.core.widget.doOnTextChanged
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.nikitosii.testapp.R
 import com.nikitosii.testapp.databinding.FragmentMainBinding
 import com.nikitosii.testapp.domain.source.AttributeType
 import com.nikitosii.testapp.ui.base.BaseFragment
@@ -38,6 +39,7 @@ class MainFragment : BaseFragment<MainViewModel>() {
 
     private fun initViews() {
         with(binding) {
+            tvTitle.text = getString(R.string.config_title, viewModel.counter.value?.plus(1) ?: 0)
             btnGo.onClick {
                 val maxCount = viewModel.fieldsConfig.value?.configs?.size
                 if (maxCount.isNotNull())
@@ -91,6 +93,7 @@ class MainFragment : BaseFragment<MainViewModel>() {
 
 
     private fun updateList() {
+        binding.tvTitle.text = getString(R.string.config_title, viewModel.counter.value?.plus(1) ?: 0)
         binding.llContainer.removeAllViews()
         subscribe()
     }
