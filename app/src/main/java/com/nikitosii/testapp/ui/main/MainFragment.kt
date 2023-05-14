@@ -73,7 +73,7 @@ class MainFragment : BaseFragment<MainViewModel>() {
             layout.hint = it.attributeText
             et.doOnTextChanged { text, _, _, _ ->
                 it.value = text.toString()
-                layout.error = it.errorText
+                layout.error = it.attributeType.errorMessage
                 layout.isErrorEnabled = !it.isValid(text.toString())
                 binding.btnGo.isEnabled = it.isValid(text.toString())
             }
@@ -85,7 +85,7 @@ class MainFragment : BaseFragment<MainViewModel>() {
             val params = layout.layoutParams
             params.height = 300
             layout.layoutParams = params
-            val child = layout.get(0)
+            val child = layout[0]
             val childParams = child.layoutParams
             childParams.height = 230
         }

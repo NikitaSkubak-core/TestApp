@@ -52,7 +52,10 @@ object AttributeConstants {
     const val SHADOW_WIDTH = "Shadow Width"
     const val SHADOW_MIN_HEIGHT = "Shadow MinHeight"
     const val SHADOW_MIN_WIDTH = "Shadow MinWidth"
-    const val UNDERLINE_THICKNESS = "UnderLine Thickness"
+    const val UNDERLINE = "UnderLine"
+    const val UNDERLINE_COLOR_RED = "UnderLine Color Red"
+    const val UNDERLINE_COLOR_GREEN = "UnderLine Color Green"
+    const val UNDERLINE_COLOR_BLUE = "UnderLine Color Blue"
     const val URL_LINK = "URL link"
     const val URL_TEXT_COLOR_RED = "URL text color Red"
     const val URL_TEXT_COLOR_GREEN = "URL text color Green"
@@ -60,6 +63,9 @@ object AttributeConstants {
     const val URL_TEXT_CONTENT = "URL text Content"
     const val URL_TEXT_FONT = "URL text Font"
     const val URL_TEXT_FONT_SIZE = "URL text FontSize"
-
+    const val URL_UNDERLINE = "URL UnderLine"
+    const val URL_UNDERLINE_COLOR_RED = "URL UnderLine Color Red"
+    const val URL_UNDERLINE_COLOR_GREEN = "URL UnderLine Color Green"
+    const val URL_UNDERLINE_COLOR_BLUE = "URL UnderLine Color Blue"
     const val NOT_USABLE_NUMBER = -1
 }

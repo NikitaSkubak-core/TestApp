@@ -2,12 +2,15 @@ package com.nikitosii.testapp.util.ext
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.text.Html
 import android.text.InputType
 import android.text.InputType.TYPE_CLASS_TEXT
 import android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
 import android.text.SpannableString
-import android.text.Spanned
+import android.text.SpannableStringBuilder
+import android.text.Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+import android.text.Spanned.SPAN_INCLUSIVE_INCLUSIVE
 import android.text.TextUtils
 import android.text.style.RelativeSizeSpan
 import android.text.style.TypefaceSpan
@@ -17,6 +20,8 @@ import android.view.inputmethod.EditorInfo.IME_FLAG_NO_ENTER_ACTION
 import android.widget.EditText
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.text.HtmlCompat
+import androidx.core.text.color
 import androidx.core.view.setPadding
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.nikitosii.testapp.R
@@ -24,7 +29,15 @@ import com.nikitosii.testapp.domain.source.ConfigData
 import com.nikitosii.testapp.ui.result.ResultFragment
 import com.nikitosii.testapp.util.AttributeConstants
 import com.nikitosii.testapp.util.AttributeConstants.NOT_USABLE_NUMBER
-import com.nikitosii.testapp.util.AttributeConstants.UNDERLINE_THICKNESS
+import com.nikitosii.testapp.util.AttributeConstants.UNDERLINE
+import com.nikitosii.testapp.util.AttributeConstants.UNDERLINE_COLOR_BLUE
+import com.nikitosii.testapp.util.AttributeConstants.UNDERLINE_COLOR_GREEN
+import com.nikitosii.testapp.util.AttributeConstants.UNDERLINE_COLOR_RED
+import com.nikitosii.testapp.util.AttributeConstants.URL_UNDERLINE
+import com.nikitosii.testapp.util.AttributeConstants.URL_UNDERLINE_COLOR_BLUE
+import com.nikitosii.testapp.util.AttributeConstants.URL_UNDERLINE_COLOR_GREEN
+import com.nikitosii.testapp.util.AttributeConstants.URL_UNDERLINE_COLOR_RED
+import com.nikitosii.testapp.util.DrawableSpan
 import java.lang.Float
 
 fun EditText.setPadding(config: ConfigData) {
@@ -110,13 +123,13 @@ fun EditText.setTextAttributes(config: ConfigData) {
     val text = config.findValue(AttributeConstants.CONTENT)
     val isInputType = config.findBoolean(AttributeConstants.INPUT)
     isEnabled = isInputType
-    setText(text.ifEmpty { defaultText })
     setTextColor(config)
     setTextInputStyle(config)
     maxLines = config.findIntOrElse(AttributeConstants.LINES, 1)
     setLines(config.findIntOrElse(AttributeConstants.LINES, 1))
     ellipsize = TextUtils.TruncateAt.END
     setLineSpacing(config.findFloatOrElse(AttributeConstants.LINE_SPACE, 12.0f), 1.0f)
+    setText(text.ifEmpty { defaultText })
 }
 
 fun EditText.setTextColor(config: ConfigData) {
@@ -169,47 +182,85 @@ fun EditText.setURLParameters(config: ConfigData, context: Context) {
         true,
         ResultFragment.NOT_USABLE_NUMBER
     )
-    if (colorHex.isNotEmpty()) {
-        val url = config.findValue(AttributeConstants.URL_LINK)
-        val urlContent = config.findValue(AttributeConstants.URL_TEXT_CONTENT).ifEmpty { url }
-        val etText = this.text
-        var spannedText = SpannableString(etText)
-        val additionalInfo =
-            Html.fromHtml("<font color='$colorHex'><a href='$url'>$urlContent</a></font>")
-        val resText = TextUtils.concat(spannedText, additionalInfo)
-        spannedText = SpannableString(resText)
-        spannedText.setSpan(
-            RelativeSizeSpan(
-                config.findFloatOrElse(
-                    AttributeConstants.URL_TEXT_FONT_SIZE,
-                    28.0f
-                ) / config.findFloatOrElse(AttributeConstants.FONT, 28.0f)
-            ),
-            etText.length,
-            resText.length,
-            Spanned.SPAN_INCLUSIVE_INCLUSIVE
-        )
-        val font = when (config.findValue(AttributeConstants.URL_TEXT_FONT)) {
-            "Steagal-Regular" -> R.font.insigne_steagal_regular
-            "Steagal-Medium" -> R.font.insigne_steagal_medium
-            else -> null
-        }
-        if (font.isNotNull()) {
-            val fontType = ResourcesCompat.getFont(context, font!!)
-            spannedText.setSpan(
-                TypefaceSpan(fontType!!), etText.length,
-                resText.length,
-                Spanned.SPAN_INCLUSIVE_INCLUSIVE
-            )
-        }
-        val underline = config.findIntOrElse(UNDERLINE_THICKNESS, NOT_USABLE_NUMBER)
-        if (underline != NOT_USABLE_NUMBER)
-            spannedText.setSpan(
-                UnderlineSpan(),
-                0,
-                etText.length - 1,
-            Spanned.SPAN_INCLUSIVE_INCLUSIVE
-            )
-        setText(spannedText)
+    val url = config.findValue(AttributeConstants.URL_LINK)
+    val urlContent = config.findValue(AttributeConstants.URL_TEXT_CONTENT).ifEmpty { url }
+    val etText = text.toString()
+    var spannedText = SpannableString("$etText ")
+    val additionalInfo = Html.fromHtml(if (colorHex.isNotEmpty())
+        "<font color='$colorHex'><a href='$url'>$urlContent</a></font>"
+    else "<a href='$url'>$urlContent</a>"
+    )
+    val resText = TextUtils.concat(spannedText, additionalInfo)
+    spannedText = SpannableString(resText)
+    spannedText.setSpan(
+        RelativeSizeSpan(
+            config.findFloatOrElse(
+                AttributeConstants.URL_TEXT_FONT_SIZE,
+                28.0f
+            ) / config.findFloatOrElse(AttributeConstants.FONT, 28.0f)
+        ),
+        etText.length,
+        spannedText.length,
+        SPAN_INCLUSIVE_INCLUSIVE
+    )
+    val font = when (config.findValue(AttributeConstants.URL_TEXT_FONT)) {
+        "Steagal-Regular" -> R.font.insigne_steagal_regular
+        "Steagal-Medium" -> R.font.insigne_steagal_medium
+        else -> null
     }
+    if (font.isNotNull()) {
+        val fontType = ResourcesCompat.getFont(context, font!!)
+        spannedText.setSpan(
+            TypefaceSpan(fontType!!), etText.length,
+            spannedText.length,
+            SPAN_INCLUSIVE_INCLUSIVE
+        )
+    }
+    val underlineURL = config.findIntOrElse(URL_UNDERLINE, NOT_USABLE_NUMBER)
+    if (underlineURL != NOT_USABLE_NUMBER) {
+        val drawable = this.context.getDrawable(R.drawable.line)
+        (drawable as GradientDrawable).apply {
+            val underlineColor = config.getColorHex(
+                URL_UNDERLINE_COLOR_RED,
+                URL_UNDERLINE_COLOR_GREEN,
+                URL_UNDERLINE_COLOR_BLUE,
+                true
+            )
+            if (underlineColor.isNotEmpty()) {
+                setStroke(underlineURL, getColorState(underlineColor))
+            }
+            setPadding(0, 0, 0, 100 + underlineURL)
+        }
+        spannedText.setSpan(
+            DrawableSpan(drawable),
+            etText.length + 1,
+            spannedText.length,
+            SPAN_INCLUSIVE_INCLUSIVE
+        )
+    }
+    val underline = config.findIntOrElse(UNDERLINE, NOT_USABLE_NUMBER)
+    if (underline != NOT_USABLE_NUMBER) {
+        val drawable = this.context.getDrawable(R.drawable.line)
+        (drawable as GradientDrawable).apply {
+            val underlineColor = config.getColorHex(
+                UNDERLINE_COLOR_RED,
+                UNDERLINE_COLOR_GREEN,
+                UNDERLINE_COLOR_BLUE,
+                true
+            )
+            if (underlineColor.isNotEmpty()) {
+                setStroke(underline, getColorState(underlineColor))
+            }
+            setPadding(0, 0, 0, 100 + underline)
+        }
+        spannedText.setSpan(
+            DrawableSpan(drawable),
+            0,
+            etText.length,
+            SPAN_INCLUSIVE_INCLUSIVE
+        )
+    }
+    setText(spannedText)
+    if (colorHex.isNotEmpty())
+        setLinkTextColor(getColorState(colorHex))
 }
